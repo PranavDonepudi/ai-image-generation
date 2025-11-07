@@ -81,41 +81,52 @@ app.post("/api/image/generation", async (c) => {
       return c.json({ error: "Image prompt is required" }, 400);
     }
 
-    // Free Hugging Face Inference API
-    const HF_TOKEN = c.env.HF_TOKEN; // Add this to your wrangler.toml secrets
-    
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${HF_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inputs: `${imagePrompt}, postcard style, scenic, beautiful`,
-        }),
-      }
-    );
+    console.log("Generating image with Pollinations.ai...");
 
+    // Pollinations.ai - completely free, no auth, very reliable
+    const encodedPrompt = encodeURIComponent(imagePrompt);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true`;
+
+    console.log("Fetching image from:", imageUrl);
+
+    const response = await fetch(imageUrl);
+    
     if (!response.ok) {
-      throw new Error(`HF API error: ${response.status}`);
+      throw new Error(`Failed to fetch image: ${response.status}`);
     }
 
-    // Response is binary image
     const imageBuffer = await response.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
 
-    return c.json({
-      success: true,
-      image: base64Image,
-      city: city || "Unknown",
-      name: name || "Anonymous",
-      timestamp: new Date().toISOString(),
-    });
+    console.log("Image generated successfully!");
+
+        return c.json({
+          success: true,
+          image: base64Image,
+          city: city || "Unknown",
+          name: name || "Anonymous",
+          timestamp: new Date().toISOString(),
+          modelUsed: model
+        });
+
+      } catch (error: any) {
+        console.error(`Model ${model} error:`, error.message);
+        lastError = error;
+        continue;
+      }
+    }
+
+    // All models failed
+    console.error("All models failed. Last error:", lastError);
+    
+    return c.json({ 
+      error: "Failed to generate image. The AI models may be loading or temporarily unavailable.",
+      message: lastError?.message || "Unknown error",
+      code: "GENERATION_FAILED"
+    }, 500);
 
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("Error in /api/image/generation:", error);
     return c.json({ 
       error: "Failed to generate image",
       message: error.message
