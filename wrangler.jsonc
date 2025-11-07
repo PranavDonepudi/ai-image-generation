@@ -11,9 +11,20 @@
 		"binding": "ASSETS",
 		"directory": "./public"
 	},
+	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
 		"enabled": true
-	}
+	},
+	"r2_buckets": [
+		{
+			"bucket_name": "postcard-api",
+			"binding": "BUCKET"
+		}
+	],
+	
+	"ai": {
+    "binding": "AI"
+  	}
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
