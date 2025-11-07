@@ -81,64 +81,41 @@ app.post("/api/image/generation", async (c) => {
       return c.json({ error: "Image prompt is required" }, 400);
     }
 
-    // List of models to try (from fastest to slowest)
-    const models = [
-      { 
-        name: "@cf/bytedance/stable-diffusion-xl-lightning", 
-        steps: 4 
-      },
-      { 
-        name: "@cf/lykon/dreamshaper-8-lcm", 
-        steps: 4 
-      },
-      { 
-        name: "@cf/stabilityai/stable-diffusion-xl-base-1.0", 
-        steps: 20 
+    // Free Hugging Face Inference API
+    const HF_TOKEN = c.env.HF_TOKEN; // Add this to your wrangler.toml secrets
+    
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${HF_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: `${imagePrompt}, postcard style, scenic, beautiful`,
+        }),
       }
-    ];
+    );
 
-    let lastError = null;
-
-    // Try each model once
-    for (const model of models) {
-      try {
-        console.log(`Trying model: ${model.name}`);
-
-        const generateImage = await c.env.AI.run(model.name, {
-          prompt: `${imagePrompt}, postcard style, scenic, beautiful, high quality`,
-          num_steps: model.steps
-        });
-
-        if (generateImage && generateImage.image) {
-          console.log(`Success with model: ${model.name}`);
-          
-          return c.json({
-            success: true,
-            image: generateImage.image,
-            city: city || "Unknown",
-            name: name || "Anonymous",
-            timestamp: new Date().toISOString(),
-            modelUsed: model.name
-          });
-        }
-      } catch (error: any) {
-        console.error(`Model ${model.name} failed:`, error.message);
-        lastError = error;
-        // Continue to next model
-      }
+    if (!response.ok) {
+      throw new Error(`HF API error: ${response.status}`);
     }
 
-    // All models failed
-    console.error("All models failed. Last error:", lastError);
-    
-    return c.json({ 
-      error: "All AI models are currently at capacity. Please try again in a few minutes.",
-      code: "ALL_MODELS_UNAVAILABLE",
-      message: lastError?.message || "Unknown error"
-    }, 503);
+    // Response is binary image
+    const imageBuffer = await response.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+
+    return c.json({
+      success: true,
+      image: base64Image,
+      city: city || "Unknown",
+      name: name || "Anonymous",
+      timestamp: new Date().toISOString(),
+    });
 
   } catch (error: any) {
-    console.error("Error in /api/image/generation:", error);
+    console.error("Error:", error);
     return c.json({ 
       error: "Failed to generate image",
       message: error.message
