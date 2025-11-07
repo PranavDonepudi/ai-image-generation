@@ -1,17 +1,19 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { Buffer } from "buffer";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 // Add CORS
-app.use("/*", cors());
+app.use("/*", cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type'],
+}));
 
-app.get("/", (c) => {
-  return c.html(`
-    <!DOCTYPE html>
-    <html>... your HTML here ...</html>
-  `);
+app.get("/", async (c) => {
+  // Serve your HTML file here
+  const html = await fetch(new URL('./index.html', import.meta.url));
+  return c.html(await html.text());
 });
 
 // Colo info endpoint
@@ -24,22 +26,23 @@ app.get("/api/colo", (c) => {
   });
 });
 
-// Images list endpoint (returns empty for now since we're not using R2)
+// Images list endpoint
 app.get("/api/images", (c) => {
-  // Since you're not storing images, return empty array
-  // The frontend will show "No postcards yet"
-  return c.json({
-    images: []
-  });
+  return c.json({ images: [] });
 });
 
 app.post("/api/image/prompt", async (c) => {
   try {
-    const { city } = await c.req.json();
+    const body = await c.req.json();
+    console.log("Prompt request:", body);
+    
+    const { city } = body;
 
     if (!city) {
       return c.json({ error: "City is required" }, 400);
     }
+
+    console.log("Generating prompt for:", city);
 
     const response = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
       messages: [
@@ -54,10 +57,23 @@ app.post("/api/image/prompt", async (c) => {
       ]
     });
 
+    console.log("AI Response structure:", JSON.stringify(response, null, 2));
+
     let imagePrompt = "";
-    if (response && response.response) {
+    
+    // Try multiple response formats
+    if (response?.response) {
       imagePrompt = response.response;
+    } else if (response?.result?.response) {
+      imagePrompt = response.result.response;
+    } else if (typeof response === 'string') {
+      imagePrompt = response;
+    } else {
+      console.error("Unexpected response format:", response);
+      imagePrompt = `A beautiful scenic postcard view of ${city}, featuring iconic landmarks, vibrant colors, vintage postcard style, high quality`;
     }
+
+    console.log("Generated prompt:", imagePrompt);
 
     return c.json({ 
       city, 
@@ -66,79 +82,115 @@ app.post("/api/image/prompt", async (c) => {
 
   } catch (error: any) {
     console.error("Error in /api/image/prompt:", error);
+    console.error("Error stack:", error.stack);
     return c.json({ 
       error: "Failed to generate prompt",
-      message: error.message
+      message: error.message,
+      details: error.stack
     }, 500);
   }
 });
 
-// IMPORTANT: This endpoint needs to return JSON with base64 image
-// NOT binary data, because your frontend expects JSON
 app.post("/api/image/generation", async (c) => {
   try {
-    const { imagePrompt, city, name } = await c.req.json();
+    const body = await c.req.json();
+    console.log("Image generation request:", body);
+
+    const { imagePrompt, city, name } = body;
 
     if (!imagePrompt) {
+      console.error("No imagePrompt provided");
       return c.json({ error: "Image prompt is required" }, 400);
     }
 
-    // Retry logic for capacity issues
+    console.log("Generating image with prompt:", imagePrompt);
+
+    // Retry logic
     const maxRetries = 3;
-    const baseDelay = 1000;
-    let lastError;
+    const baseDelay = 2000;
+    let lastError: any = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const generateImage = await c.env.AI.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", {
-          prompt: `${imagePrompt}, postcard style, high quality, scenic view`,
-        });
+        console.log(`Attempt ${attempt + 1}/${maxRetries}`);
 
-        if (!generateImage || !generateImage.image) {
+        const generateImage = await c.env.AI.run(
+          "@cf/stabilityai/stable-diffusion-xl-base-1.0",
+          {
+            prompt: `${imagePrompt}, postcard style, high quality, scenic view, professional photography`,
+          }
+        );
+
+        console.log("Image generation response received");
+
+        if (!generateImage) {
+          throw new Error("No response from AI model");
+        }
+
+        if (!generateImage.image) {
+          console.error("Response structure:", JSON.stringify(generateImage, null, 2));
           throw new Error("No image in response");
         }
 
-        // Return JSON with base64 image and metadata
-        // This is what your frontend expects!
+        console.log("Image generated successfully, size:", generateImage.image.length);
+
+        // Return JSON with base64 image
         return c.json({
           success: true,
-          image: generateImage.image, // base64 string
-          city,
-          name,
+          image: generateImage.image,
+          city: city || "Unknown",
+          name: name || "Anonymous",
           timestamp: new Date().toISOString()
         });
 
       } catch (error: any) {
         lastError = error;
         console.error(`Attempt ${attempt + 1} failed:`, error.message);
+        console.error("Error details:", error);
 
-        if (error.message?.includes("Capacity") || error.message?.includes("3040")) {
-          if (attempt < maxRetries - 1) {
-            const delay = baseDelay * Math.pow(2, attempt);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-        } else {
-          throw error;
+        // Check if it's a capacity error
+        const isCapacityError = 
+          error.message?.includes("Capacity") || 
+          error.message?.includes("3040") ||
+          error.message?.includes("temporarily exceeded");
+
+        if (isCapacityError && attempt < maxRetries - 1) {
+          const delay = baseDelay * Math.pow(2, attempt);
+          console.log(`Capacity issue detected. Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        // If it's not a capacity error or last attempt, break
+        if (!isCapacityError || attempt === maxRetries - 1) {
+          break;
         }
       }
     }
 
+    // All retries failed
+    console.error("All retry attempts failed. Last error:", lastError);
+    
     return c.json({ 
-      error: "Service temporarily unavailable",
-      code: "CAPACITY_EXCEEDED"
+      error: lastError?.message?.includes("Capacity") 
+        ? "AI service is at capacity. Please try again in a moment."
+        : "Failed to generate image",
+      message: lastError?.message || "Unknown error",
+      code: lastError?.message?.includes("Capacity") ? "CAPACITY_EXCEEDED" : "GENERATION_FAILED"
     }, 503);
 
   } catch (error: any) {
     console.error("Error in /api/image/generation:", error);
+    console.error("Error stack:", error.stack);
     return c.json({ 
       error: "Failed to generate image",
-      message: error.message
+      message: error.message,
+      details: error.stack
     }, 500);
   }
 });
 
-// Favicon handler
+// Favicon
 app.get("/favicon.ico", (c) => {
   return new Response(null, { status: 204 });
 });
