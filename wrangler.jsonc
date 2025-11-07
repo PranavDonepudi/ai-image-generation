@@ -15,13 +15,6 @@
 	"observability": {
 		"enabled": true
 	},
-	"r2_buckets": [
-		{
-			"bucket_name": "postcard-api",
-			"binding": "BUCKET"
-		}
-	],
-	
 	"ai": {
     "binding": "AI"
   	}
