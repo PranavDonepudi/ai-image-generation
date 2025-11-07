@@ -451,27 +451,29 @@
 
         // Generate postcard
         async function generatePostcard(city, name) {
-            isGenerating = true;
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = 'Generating<span class="loader"></span>';
-            showMessage('Step 1/2: Creating prompt...', 'info');
+			isGenerating = true;
+			generateBtn.disabled = true;
+			generateBtn.innerHTML = 'Generating<span class="loader"></span>';
+			showMessage('Step 1/2: Creating prompt...', 'info');
 
-            try {
-                // Step 1: Generate image prompt
-                const promptResponse = await fetch('/api/image/prompt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ city })
-                });
+			try {
+				// Step 1: Generate image prompt
+				const promptResponse = await fetch('/api/image/prompt', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ city })
+				});
 
-                if (!promptResponse.ok) {
-                    throw new Error('Failed to generate prompt');
-                }
+				if (!promptResponse.ok) {
+					throw new Error('Failed to generate prompt');
+				}
 
-                const promptData = await promptResponse.json();
-                showMessage('Step 2/2: Generating image...', 'info');
+				const promptData = await promptResponse.json();
+				console.log('Prompt generated:', promptData);
+				
+				showMessage('Step 2/2: Generating image...', 'info');
 
-                // Step 2: Generate image
+				// Step 2: Generate image
 				const imageResponse = await fetch('/api/image/generation', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -486,33 +488,37 @@
 					throw new Error('Failed to generate image');
 				}
 
-				const imageData = await imageResponse.json(); // This now works!
+				const imageData = await imageResponse.json();
+				console.log('Image data received:', imageData); // DEBUG
+				
 				showMessage('Postcard generated successfully!', 'success');
 
-				// Add the new postcard to the gallery immediately
-				addPostcardToGallery({
-					image: imageData.image, // base64 string
-					city: imageData.city,
-					name: imageData.name,
-					timestamp: imageData.timestamp
-				});
+				// ADD THIS: Display the postcard immediately
+				if (imageData.success && imageData.image) {
+					addPostcardToGallery({
+						image: imageData.image,
+						city: imageData.city,
+						name: imageData.name,
+						timestamp: imageData.timestamp
+					});
+				} else {
+					console.error('Image data missing:', imageData);
+					showMessage('Image generated but could not be displayed', 'error');
+				}
 
 				// Clear form
 				cityInput.value = '';
 				nameInput.value = '';
 
-                // Reload gallery
-                await loadGallery();
-
-            } catch (error) {
-                console.error('Error generating postcard:', error);
-                showMessage('Failed to generate postcard. Please try again.', 'error');
-            } finally {
-                isGenerating = false;
-                generateBtn.disabled = false;
-                generateBtn.textContent = 'Generate Postcard';
-            }
-        }
+			} catch (error) {
+				console.error('Error generating postcard:', error);
+				showMessage('Failed to generate postcard. Please try again.', 'error');
+			} finally {
+				isGenerating = false;
+				generateBtn.disabled = false;
+				generateBtn.textContent = 'Generate Postcard';
+			}
+		}
 
         // Show status message
         function showMessage(message, type) {

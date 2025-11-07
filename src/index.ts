@@ -3,6 +3,8 @@ import { cors } from "hono/cors";
 import {Buffer} from 'buffer';
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 5000; // 5 seconds between requests
 // Add CORS
 app.use("/*", cors({
   origin: '*',
@@ -81,11 +83,24 @@ app.post("/api/image/generation", async (c) => {
       return c.json({ error: "Image prompt is required" }, 400);
     }
 
+    // Rate limiting protection
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
+      console.log(`Rate limit protection: waiting ${waitTime}ms`);
+      await new Promise(r => setTimeout(r, waitTime));
+    }
+    
+    lastRequestTime = Date.now();
+
     console.log("Generating image with Pollinations.ai...");
 
-    // Pollinations.ai - completely free, no auth, very reliable
     const encodedPrompt = encodeURIComponent(imagePrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&enhance=true`;
+    // Add random seed to avoid cache issues
+    const seed = Math.floor(Math.random() * 1000000);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
 
     console.log("Fetching image from:", imageUrl);
 
@@ -128,7 +143,7 @@ app.post("/api/image/generation", async (c) => {
   } catch (error: any) {
     console.error("Error in /api/image/generation:", error);
     return c.json({ 
-      error: "Failed to generate image",
+      error: "Failed to generate image. Please wait a moment and try again.",
       message: error.message
     }, 500);
   }
