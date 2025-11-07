@@ -395,6 +395,30 @@
                 </div>
             `).join('');
         }
+		function addPostcardToGallery(postcard) {
+			// Remove empty gallery message if it exists
+			const emptyGallery = galleryGrid.querySelector('.empty-gallery');
+			if (emptyGallery) {
+				galleryGrid.innerHTML = '';
+			}
+
+			// Create postcard element
+			const postcardDiv = document.createElement('div');
+			postcardDiv.className = 'postcard';
+			postcardDiv.innerHTML = `
+				<img src="data:image/png;base64,${postcard.image}" 
+					alt="Postcard from ${escapeHtml(postcard.city)}" 
+					class="postcard-image">
+				<div class="postcard-info">
+					<div class="postcard-city">${escapeHtml(postcard.city)}</div>
+					<div class="postcard-name">For ${escapeHtml(postcard.name)}</div>
+					<div class="postcard-date">${formatDate(postcard.timestamp)}</div>
+				</div>
+			`;
+
+			// Add to beginning of gallery
+			galleryGrid.insertBefore(postcardDiv, galleryGrid.firstChild);
+		}
 
         // Show empty gallery message
         function showEmptyGallery() {
@@ -448,26 +472,34 @@
                 showMessage('Step 2/2: Generating image...', 'info');
 
                 // Step 2: Generate image
-                const imageResponse = await fetch('/api/image/generation', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        imagePrompt: promptData.imagePrompt,
-                        city,
-                        name
-                    })
-                });
+				const imageResponse = await fetch('/api/image/generation', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						imagePrompt: promptData.imagePrompt,
+						city,
+						name
+					})
+				});
 
-                if (!imageResponse.ok) {
-                    throw new Error('Failed to generate image');
-                }
+				if (!imageResponse.ok) {
+					throw new Error('Failed to generate image');
+				}
 
-                const imageData = await imageResponse.json();
-                showMessage('Postcard generated successfully!', 'success');
+				const imageData = await imageResponse.json(); // This now works!
+				showMessage('Postcard generated successfully!', 'success');
 
-                // Clear form
-                cityInput.value = '';
-                nameInput.value = '';
+				// Add the new postcard to the gallery immediately
+				addPostcardToGallery({
+					image: imageData.image, // base64 string
+					city: imageData.city,
+					name: imageData.name,
+					timestamp: imageData.timestamp
+				});
+
+				// Clear form
+				cityInput.value = '';
+				nameInput.value = '';
 
                 // Reload gallery
                 await loadGallery();

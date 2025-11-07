@@ -4,25 +4,42 @@ import { Buffer } from "buffer";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
-// Add CORS for frontend access
+// Add CORS
 app.use("/*", cors());
 
 app.get("/", (c) => {
-  return c.text("Postcard Generator API - Running");
+  return c.html(`
+    <!DOCTYPE html>
+    <html>... your HTML here ...</html>
+  `);
+});
+
+// Colo info endpoint
+app.get("/api/colo", (c) => {
+  const cf = c.req.raw.cf;
+  return c.json({
+    city: cf?.city || "Unknown",
+    country: cf?.country || "Unknown",
+    colo: cf?.colo || "Unknown"
+  });
+});
+
+// Images list endpoint (returns empty for now since we're not using R2)
+app.get("/api/images", (c) => {
+  // Since you're not storing images, return empty array
+  // The frontend will show "No postcards yet"
+  return c.json({
+    images: []
+  });
 });
 
 app.post("/api/image/prompt", async (c) => {
   try {
-    const body = await c.req.json();
-    console.log("Request body:", body);
-    
-    const { city } = body;
+    const { city } = await c.req.json();
 
     if (!city) {
       return c.json({ error: "City is required" }, 400);
     }
-
-    console.log("Calling AI for city:", city);
 
     const response = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
       messages: [
@@ -37,21 +54,9 @@ app.post("/api/image/prompt", async (c) => {
       ]
     });
 
-    console.log("AI Response:", JSON.stringify(response, null, 2));
-
     let imagePrompt = "";
-
-    // Parse response based on actual structure
     if (response && response.response) {
       imagePrompt = response.response;
-    } else if (response && typeof response === 'string') {
-      imagePrompt = response;
-    } else {
-      console.error("Unexpected response format:", response);
-      return c.json({ 
-        error: "Unexpected AI response format",
-        debug: response 
-      }, 500);
     }
 
     return c.json({ 
@@ -63,18 +68,16 @@ app.post("/api/image/prompt", async (c) => {
     console.error("Error in /api/image/prompt:", error);
     return c.json({ 
       error: "Failed to generate prompt",
-      message: error.message,
-      stack: error.stack
+      message: error.message
     }, 500);
   }
 });
 
+// IMPORTANT: This endpoint needs to return JSON with base64 image
+// NOT binary data, because your frontend expects JSON
 app.post("/api/image/generation", async (c) => {
   try {
-    const body = await c.req.json();
-    console.log("Image generation request:", body);
-
-    const { imagePrompt, city } = body;
+    const { imagePrompt, city, name } = await c.req.json();
 
     if (!imagePrompt) {
       return c.json({ error: "Image prompt is required" }, 400);
@@ -87,8 +90,6 @@ app.post("/api/image/generation", async (c) => {
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        console.log(`Attempting image generation (attempt ${attempt + 1}/${maxRetries})`);
-
         const generateImage = await c.env.AI.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", {
           prompt: `${imagePrompt}, postcard style, high quality, scenic view`,
         });
@@ -97,17 +98,16 @@ app.post("/api/image/generation", async (c) => {
           throw new Error("No image in response");
         }
 
-        const base64Image = generateImage.image;
-        const buffer = Buffer.from(base64Image, "base64");
-
-        return new Response(buffer, {
-          status: 200,
-          headers: {
-            "Content-Type": "image/png",
-            "Content-Disposition": `inline; filename="postcard-${city || 'image'}.png"`,
-            "Access-Control-Allow-Origin": "*",
-          },
+        // Return JSON with base64 image and metadata
+        // This is what your frontend expects!
+        return c.json({
+          success: true,
+          image: generateImage.image, // base64 string
+          city,
+          name,
+          timestamp: new Date().toISOString()
         });
+
       } catch (error: any) {
         lastError = error;
         console.error(`Attempt ${attempt + 1} failed:`, error.message);
@@ -115,7 +115,6 @@ app.post("/api/image/generation", async (c) => {
         if (error.message?.includes("Capacity") || error.message?.includes("3040")) {
           if (attempt < maxRetries - 1) {
             const delay = baseDelay * Math.pow(2, attempt);
-            console.log(`Waiting ${delay}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
@@ -139,7 +138,7 @@ app.post("/api/image/generation", async (c) => {
   }
 });
 
-// Favicon handler to stop 404 errors
+// Favicon handler
 app.get("/favicon.ico", (c) => {
   return new Response(null, { status: 204 });
 });
