@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Postcard Generator</title>
+    <title>✨ AI Postcard Generator</title>
     <style>
         * {
             margin: 0;
@@ -12,10 +12,18 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             color: #333;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .container {
@@ -25,46 +33,102 @@
         }
 
         header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px;
+            border-radius: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+            backdrop-filter: blur(10px);
         }
 
         h1 {
-            color: #7c3aed;
-            font-size: 2rem;
-            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
         }
 
         .colo-info {
-            background: #7c3aed;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 50px;
             font-size: 0.9rem;
-            font-weight: 500;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .main-content {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #f39c12;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-banner h3 {
+            color: #d35400;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-banner p {
+            color: #8b4513;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .info-banner strong {
+            color: #c0392b;
         }
 
         .section-title {
-            font-size: 1.5rem;
-            color: #7c3aed;
-            margin-bottom: 20px;
-            font-weight: 600;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+            font-weight: 700;
         }
 
         .form-section {
@@ -72,80 +136,118 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
+            margin-bottom: 10px;
+            font-weight: 600;
             color: #555;
+            font-size: 1rem;
         }
 
         input[type="text"] {
             width: 100%;
-            max-width: 400px;
-            padding: 12px 16px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+            max-width: 450px;
+            padding: 15px 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #7c3aed;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        input[type="text"]::placeholder {
+            color: #aaa;
         }
 
         button {
-            background: #7c3aed;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px 32px;
+            padding: 16px 40px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.3s, transform 0.1s;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         button:hover {
-            background: #6d28d9;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
         }
 
         button:active {
-            transform: scale(0.98);
+            transform: translateY(-1px);
         }
 
         button:disabled {
-            background: #ccc;
+            background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .status-message {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
+            margin-top: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
             display: none;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .status-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
         }
 
         .status-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: linear-gradient(135deg, #d63031 0%, #ff7675 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(214, 48, 49, 0.3);
         }
 
         .status-message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
         }
 
         .status-message.show {
@@ -154,12 +256,12 @@
 
         .loader {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 0.8s linear infinite;
             margin-left: 10px;
             vertical-align: middle;
         }
@@ -169,168 +271,219 @@
         }
 
         .gallery-section {
-            margin-top: 40px;
+            margin-top: 50px;
         }
 
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
         }
 
         .postcard {
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
         }
 
         .postcard:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-10px) rotate(2deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .postcard-image {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
-            background: #f0f0f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: transform 0.4s ease;
+        }
+
+        .postcard:hover .postcard-image {
+            transform: scale(1.1);
         }
 
         .postcard-info {
-            padding: 15px;
+            padding: 20px;
+            background: white;
         }
 
         .postcard-city {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #7c3aed;
-            margin-bottom: 5px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
         }
 
         .postcard-name {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .postcard-date {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #999;
         }
 
         .empty-gallery {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             color: #999;
+            grid-column: 1 / -1;
         }
 
         .empty-gallery svg {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-            opacity: 0.3;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 25px;
+            opacity: 0.4;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-gallery p {
+            font-size: 1.1rem;
+            font-weight: 500;
         }
 
         footer {
             text-align: center;
-            padding: 30px 20px;
+            padding: 40px 20px;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         footer p {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             flex-wrap: wrap;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         .footer-links a {
-            color: #7c3aed;
+            color: #667eea;
             text-decoration: none;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            transition: all 0.3s;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            transition: all 0.3s ease;
             font-size: 0.9rem;
             font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .footer-links a:hover {
             background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         @media (max-width: 768px) {
             h1 {
-                font-size: 1.5rem;
+                font-size: 1.8rem;
             }
 
             .main-content {
-                padding: 20px;
+                padding: 25px;
             }
 
             .gallery-grid {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                gap: 15px;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
             }
+
+            input[type="text"] {
+                max-width: 100%;
+            }
+        }
+
+        /* Fun emoji decorations */
+        .emoji {
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>AI Postcard Generator</h1>
-            <div class="colo-info" id="coloInfo">Loading location...</div>
+            <h1>✨ AI Postcard Generator</h1>
+            <div class="colo-info" id="coloInfo">🌍 Loading location...</div>
         </header>
 
         <div class="main-content">
+            <div class="info-banner">
+                <h3><span class="emoji">💡</span> Pro Tips for Best Results</h3>
+                <p>
+                    <strong>🏙️ Be specific!</strong> Try "Paris Eiffel Tower", "Tokyo at night", or "New York skyline" instead of just city names.
+                    <br><br>
+                    <strong>⚠️ Heads up:</strong> Free AI models can hit capacity limits during peak hours. If generation fails, wait a minute and try again. Your patience = awesome postcards! 🎨
+                </p>
+            </div>
+
             <div class="form-section">
-                <h2 class="section-title">Generate Your Postcard</h2>
+                <h2 class="section-title">🎨 Create Your Postcard</h2>
                 <form id="postcardForm">
                     <div class="form-group">
-                        <label for="city">City</label>
-                        <input type="text" id="city" name="city" placeholder="Enter a city name (e.g., Paris, Tokyo)" required>
+                        <label for="city">🌆 City or Location</label>
+                        <input type="text" id="city" name="city" placeholder="e.g., Paris, Tokyo Cherry Blossoms, Grand Canyon..." required>
                     </div>
                     <div class="form-group">
-                        <label for="name">Your Name</label>
-                        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                        <label for="name">👤 Recipient Name</label>
+                        <input type="text" id="name" name="name" placeholder="Who's this postcard for?" required>
                     </div>
-                    <button type="submit" id="generateBtn">Generate Postcard</button>
+                    <button type="submit" id="generateBtn">
+                        <span>✨ Generate Postcard</span>
+                    </button>
                     <div class="status-message" id="statusMessage"></div>
                 </form>
             </div>
 
             <div class="gallery-section">
-                <h2 class="section-title">Postcard Gallery</h2>
+                <h2 class="section-title">🖼️ Your Postcard Collection</h2>
                 <div class="gallery-grid" id="galleryGrid">
                     <div class="empty-gallery">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                         </svg>
-                        <p>No postcards yet. Generate your first postcard!</p>
+                        <p>🎭 Your gallery is empty! Create your first masterpiece above.</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <footer>
-            <p>Powered by Cloudflare Workers AI • Built with Hono</p>
+            <p>⚡ Powered by Cloudflare Workers AI • Built with Hono Framework</p>
             <div class="footer-links">
-                <a href="https://github.com/harshil1712/workshop-build-ai-app-api" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
-                <a href="https://developers.cloudflare.com/workers/" target="_blank" rel="noopener noreferrer">Cloudflare Workers</a>
-                <a href="https://developers.cloudflare.com/workers-ai/" target="_blank" rel="noopener noreferrer">Workers AI</a>
-                <a href="https://hono.dev/" target="_blank" rel="noopener noreferrer">Hono Framework</a>
+                <a href="https://github.com/harshil1712/workshop-build-ai-app-api" target="_blank" rel="noopener noreferrer">📚 GitHub</a>
+                <a href="https://developers.cloudflare.com/workers/" target="_blank" rel="noopener noreferrer">☁️ Workers</a>
+                <a href="https://developers.cloudflare.com/workers-ai/" target="_blank" rel="noopener noreferrer">🤖 Workers AI</a>
+                <a href="https://hono.dev/" target="_blank" rel="noopener noreferrer">🔥 Hono</a>
             </div>
         </footer>
     </div>
@@ -378,7 +531,6 @@
                 }
             } catch (error) {
                 console.error('Error loading gallery:', error);
-                showMessage('Failed to load gallery', 'error');
             }
         }
 
@@ -395,44 +547,46 @@
                 </div>
             `).join('');
         }
-		function addPostcardToGallery(postcard) {
-			// Remove empty gallery message if it exists
-			const emptyGallery = galleryGrid.querySelector('.empty-gallery');
-			if (emptyGallery) {
-				galleryGrid.innerHTML = '';
-			}
 
-			// Create postcard element
-			const postcardDiv = document.createElement('div');
-			postcardDiv.className = 'postcard';
-			postcardDiv.innerHTML = `
-				<img src="data:image/png;base64,${postcard.image}" 
-					alt="Postcard from ${escapeHtml(postcard.city)}" 
-					class="postcard-image">
-				<div class="postcard-info">
-					<div class="postcard-city">${escapeHtml(postcard.city)}</div>
-					<div class="postcard-name">For ${escapeHtml(postcard.name)}</div>
-					<div class="postcard-date">${formatDate(postcard.timestamp)}</div>
-				</div>
-			`;
+        function addPostcardToGallery(postcard) {
+            const emptyGallery = galleryGrid.querySelector('.empty-gallery');
+            if (emptyGallery) {
+                galleryGrid.innerHTML = '';
+            }
 
-			// Add to beginning of gallery
-			galleryGrid.insertBefore(postcardDiv, galleryGrid.firstChild);
-		}
+            const postcardDiv = document.createElement('div');
+            postcardDiv.className = 'postcard';
+            postcardDiv.style.opacity = '0';
+            postcardDiv.innerHTML = `
+                <img src="data:image/png;base64,${postcard.image}" 
+                    alt="Postcard from ${escapeHtml(postcard.city)}" 
+                    class="postcard-image">
+                <div class="postcard-info">
+                    <div class="postcard-city">${escapeHtml(postcard.city)}</div>
+                    <div class="postcard-name">For ${escapeHtml(postcard.name)}</div>
+                    <div class="postcard-date">${formatDate(postcard.timestamp)}</div>
+                </div>
+            `;
 
-        // Show empty gallery message
+            galleryGrid.insertBefore(postcardDiv, galleryGrid.firstChild);
+            
+            setTimeout(() => {
+                postcardDiv.style.transition = 'opacity 0.5s ease';
+                postcardDiv.style.opacity = '1';
+            }, 10);
+        }
+
         function showEmptyGallery() {
             galleryGrid.innerHTML = `
                 <div class="empty-gallery">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                     </svg>
-                    <p>No postcards yet. Generate your first postcard!</p>
+                    <p>🎭 Your gallery is empty! Create your first masterpiece above.</p>
                 </div>
             `;
         }
 
-        // Handle form submission
         postcardForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -442,91 +596,78 @@
             const name = nameInput.value.trim();
 
             if (!city || !name) {
-                showMessage('Please fill in all fields', 'error');
+                showMessage('🚨 Please fill in all fields!', 'error');
                 return;
             }
 
             await generatePostcard(city, name);
         });
 
-        // Generate postcard
         async function generatePostcard(city, name) {
-			isGenerating = true;
-			generateBtn.disabled = true;
-			generateBtn.innerHTML = 'Generating<span class="loader"></span>';
-			showMessage('Step 1/2: Creating prompt...', 'info');
+            isGenerating = true;
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '✨ Creating Magic<span class="loader"></span>';
+            showMessage('🎨 Step 1/2: Crafting the perfect prompt...', 'info');
 
-			try {
-				// Step 1: Generate image prompt
-				const promptResponse = await fetch('/api/image/prompt', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ city })
-				});
+            try {
+                const promptResponse = await fetch('/api/image/prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city })
+                });
 
-				if (!promptResponse.ok) {
-					throw new Error('Failed to generate prompt');
-				}
+                if (!promptResponse.ok) {
+                    throw new Error('Failed to generate prompt');
+                }
 
-				const promptData = await promptResponse.json();
-				console.log('Prompt generated:', promptData);
-				
-				showMessage('Step 2/2: Generating image...', 'info');
+                const promptData = await promptResponse.json();
+                showMessage('🖼️ Step 2/2: Generating your postcard...', 'info');
 
-				// Step 2: Generate image
-				const imageResponse = await fetch('/api/image/generation', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						imagePrompt: promptData.imagePrompt,
-						city,
-						name
-					})
-				});
+                const imageResponse = await fetch('/api/image/generation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imagePrompt: promptData.imagePrompt,
+                        city,
+                        name
+                    })
+                });
 
-				if (!imageResponse.ok) {
-					throw new Error('Failed to generate image');
-				}
+                if (!imageResponse.ok) {
+                    throw new Error('Failed to generate image');
+                }
 
-				const imageData = await imageResponse.json();
-				console.log('Image data received:', imageData); // DEBUG
-				
-				showMessage('Postcard generated successfully!', 'success');
+                const imageData = await imageResponse.json();
+                
+                if (imageData.success && imageData.image) {
+                    showMessage('🎉 Postcard created successfully!', 'success');
+                    addPostcardToGallery({
+                        image: imageData.image,
+                        city: imageData.city,
+                        name: imageData.name,
+                        timestamp: imageData.timestamp
+                    });
+                    cityInput.value = '';
+                    nameInput.value = '';
+                } else {
+                    throw new Error('Invalid response format');
+                }
 
-				// ADD THIS: Display the postcard immediately
-				if (imageData.success && imageData.image) {
-					addPostcardToGallery({
-						image: imageData.image,
-						city: imageData.city,
-						name: imageData.name,
-						timestamp: imageData.timestamp
-					});
-				} else {
-					console.error('Image data missing:', imageData);
-					showMessage('Image generated but could not be displayed', 'error');
-				}
+            } catch (error) {
+                console.error('Error generating postcard:', error);
+                showMessage('😅 Oops! The AI got tired. Wait a minute and try again!', 'error');
+            } finally {
+                isGenerating = false;
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<span>✨ Generate Postcard</span>';
+            }
+        }
 
-				// Clear form
-				cityInput.value = '';
-				nameInput.value = '';
-
-			} catch (error) {
-				console.error('Error generating postcard:', error);
-				showMessage('Failed to generate postcard. Please try again.', 'error');
-			} finally {
-				isGenerating = false;
-				generateBtn.disabled = false;
-				generateBtn.textContent = 'Generate Postcard';
-			}
-		}
-
-        // Show status message
         function showMessage(message, type) {
             statusMessage.textContent = message;
             statusMessage.className = `status-message ${type} show`;
         }
 
-        // Format timestamp to readable date
         function formatDate(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleDateString('en-US', {
@@ -538,14 +679,12 @@
             });
         }
 
-        // Escape HTML to prevent XSS
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // Initialize app when DOM is ready
         init();
     </script>
 </body>

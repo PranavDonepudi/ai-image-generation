@@ -79,71 +79,52 @@ app.post("/api/image/generation", async (c) => {
   try {
     const { imagePrompt, city, name } = await c.req.json();
 
-    if (!imagePrompt) {
-      return c.json({ error: "Image prompt is required" }, 400);
+    if (!city) {
+      return c.json({ error: "City is required" }, 400);
     }
 
-    // Rate limiting protection
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTime;
+    console.log(`Fetching photo for: ${city}`);
+
+    // Unsplash API - completely free, very reliable
+    const UNSPLASH_ACCESS_KEY = c.env.UNSPLASH_ACCESS_KEY || 'YOUR_KEY_HERE';
     
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-      const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest;
-      console.log(`Rate limit protection: waiting ${waitTime}ms`);
-      await new Promise(r => setTimeout(r, waitTime));
-    }
-    
-    lastRequestTime = Date.now();
+    const response = await fetch(
+      `https://api.unsplash.com/photos/random?query=${encodeURIComponent(city + ' landmark postcard')}&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
+        }
+      }
+    );
 
-    console.log("Generating image with Pollinations.ai...");
-
-    const encodedPrompt = encodeURIComponent(imagePrompt);
-    // Add random seed to avoid cache issues
-    const seed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
-
-    console.log("Fetching image from:", imageUrl);
-
-    const response = await fetch(imageUrl);
-    
     if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status}`);
+      throw new Error(`Unsplash API error: ${response.status}`);
     }
 
-    const imageBuffer = await response.arrayBuffer();
+    const data = await response.json();
+    const imageUrl = data.urls.regular;
+
+    // Fetch the actual image and convert to base64
+    const imageResponse = await fetch(imageUrl);
+    const imageBuffer = await imageResponse.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
 
-    console.log("Image generated successfully!");
+    console.log("Photo fetched successfully!");
 
-        return c.json({
-          success: true,
-          image: base64Image,
-          city: city || "Unknown",
-          name: name || "Anonymous",
-          timestamp: new Date().toISOString(),
-          modelUsed: model
-        });
-
-      } catch (error: any) {
-        console.error(`Model ${model} error:`, error.message);
-        lastError = error;
-        continue;
-      }
-    }
-
-    // All models failed
-    console.error("All models failed. Last error:", lastError);
-    
-    return c.json({ 
-      error: "Failed to generate image. The AI models may be loading or temporarily unavailable.",
-      message: lastError?.message || "Unknown error",
-      code: "GENERATION_FAILED"
-    }, 500);
+    return c.json({
+      success: true,
+      image: base64Image,
+      city: city || "Unknown",
+      name: name || "Anonymous",
+      timestamp: new Date().toISOString(),
+      photographer: data.user.name,
+      service: "Unsplash"
+    });
 
   } catch (error: any) {
-    console.error("Error in /api/image/generation:", error);
+    console.error("Error generating image:", error);
     return c.json({ 
-      error: "Failed to generate image. Please wait a moment and try again.",
+      error: "Failed to fetch image",
       message: error.message
     }, 500);
   }
