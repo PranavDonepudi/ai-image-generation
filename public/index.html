@@ -311,7 +311,36 @@
             padding: 20px;
             background: white;
         }
+		.postcard-actions {
+			display: flex;
+			gap: 10px;
+			margin-top: 15px;
+		}
 
+		.download-btn {
+			flex: 1;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			padding: 10px 20px;
+			border: none;
+			border-radius: 8px;
+			font-size: 0.9rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			text-decoration: none;
+			text-align: center;
+			display: inline-block;
+		}
+
+		.download-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+		}
+
+		.download-btn:active {
+			transform: translateY(0);
+		}
         .postcard-city {
             font-size: 1.3rem;
             font-weight: 700;
@@ -548,33 +577,69 @@
         }
 
         function addPostcardToGallery(postcard) {
-            const emptyGallery = galleryGrid.querySelector('.empty-gallery');
-            if (emptyGallery) {
-                galleryGrid.innerHTML = '';
-            }
+			const emptyGallery = galleryGrid.querySelector('.empty-gallery');
+			if (emptyGallery) {
+				galleryGrid.innerHTML = '';
+			}
 
-            const postcardDiv = document.createElement('div');
-            postcardDiv.className = 'postcard';
-            postcardDiv.style.opacity = '0';
-            postcardDiv.innerHTML = `
-                <img src="data:image/png;base64,${postcard.image}" 
-                    alt="Postcard from ${escapeHtml(postcard.city)}" 
-                    class="postcard-image">
-                <div class="postcard-info">
-                    <div class="postcard-city">${escapeHtml(postcard.city)}</div>
-                    <div class="postcard-name">For ${escapeHtml(postcard.name)}</div>
-                    <div class="postcard-date">${formatDate(postcard.timestamp)}</div>
-                </div>
-            `;
+			const postcardDiv = document.createElement('div');
+			postcardDiv.className = 'postcard';
+			postcardDiv.style.opacity = '0';
+			
+			// Create a unique filename
+			const filename = `postcard-${postcard.city.replace(/\s+/g, '-')}-${Date.now()}.png`;
+			
+			postcardDiv.innerHTML = `
+				<img src="data:image/png;base64,${postcard.image}" 
+					alt="Postcard from ${escapeHtml(postcard.city)}" 
+					class="postcard-image"
+					data-image="${postcard.image}">
+				<div class="postcard-info">
+					<div class="postcard-city">${escapeHtml(postcard.city)}</div>
+					<div class="postcard-name">For ${escapeHtml(postcard.name)}</div>
+					<div class="postcard-date">${formatDate(postcard.timestamp)}</div>
+					<div class="postcard-actions">
+						<button class="download-btn" onclick="downloadPostcard('${postcard.image}', '${filename}')">
+							📥 Download
+						</button>
+					</div>
+				</div>
+			`;
 
-            galleryGrid.insertBefore(postcardDiv, galleryGrid.firstChild);
-            
-            setTimeout(() => {
-                postcardDiv.style.transition = 'opacity 0.5s ease';
-                postcardDiv.style.opacity = '1';
-            }, 10);
-        }
-
+			galleryGrid.insertBefore(postcardDiv, galleryGrid.firstChild);
+			
+			setTimeout(() => {
+				postcardDiv.style.transition = 'opacity 0.5s ease';
+				postcardDiv.style.opacity = '1';
+			}, 10);
+		}
+		// Add this function with your other JavaScript functions
+		function downloadPostcard(base64Image, filename) {
+			// Create a link element
+			const link = document.createElement('a');
+			
+			// Set the href to the base64 image data
+			link.href = `data:image/png;base64,${base64Image}`;
+			
+			// Set the download filename
+			link.download = filename;
+			
+			// Trigger the download
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			
+			// Show success message
+			showMessage('📥 Postcard downloaded successfully!', 'success');
+			
+			// Hide message after 3 seconds
+			setTimeout(() => {
+				const statusMsg = document.getElementById('statusMessage');
+				if (statusMsg) {
+					statusMsg.classList.remove('show');
+				}
+			}, 3000);
+		}
         function showEmptyGallery() {
             galleryGrid.innerHTML = `
                 <div class="empty-gallery">
