@@ -16,7 +16,7 @@ A beautiful web application that generates AI-powered postcards for any city in 
 
 ## 🚀 Live Demo
 
-[Here is the Deployed URL - e.g., https://image-generation-api.pd53.workers.dev]
+[Here is the Deployed URL - https://image-generation-api.pd53.workers.dev]
 
 ## 🛠️ Tech Stack
 
